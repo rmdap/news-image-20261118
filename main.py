@@ -18,8 +18,15 @@ OUT_DIR = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "out"))
 
 
 def main():
+    src = HERE / "entry.png"
+    if not src.is_file():
+        raise SystemExit(f"entry.png not found next to {__file__}")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(HERE / "entry.png", OUT_DIR / "entry.png")
+    # Copy via a temp file and rename, so a run never leaves a partial
+    # entry.png behind; the bytes written are the bundled file's, unchanged.
+    tmp = OUT_DIR / ".entry.png.tmp"
+    shutil.copyfile(src, tmp)
+    os.replace(tmp, OUT_DIR / "entry.png")
 
 
 if __name__ == "__main__":
