@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""make.fun entrypoint: copy entry.png to the output directory.
-
-Stdlib only. No network. The program writes exactly one image:
-entry.png (1024x1024, the day's world news on one page).
+"""Entry program for the make.fun news-image-20261118 bounty.
+Copies entry.png to the output directory make.fun provides.
+Standard library only; no network access.
 """
 import os
 import shutil
@@ -10,20 +9,16 @@ import sys
 
 
 def main():
-    here = os.path.dirname(os.path.abspath(__file__))
-    src = os.path.join(here, "entry.png")
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
-    os.makedirs(out_dir, exist_ok=True)
+    src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "entry.png")
     dst = os.path.join(out_dir, "entry.png")
+    os.makedirs(out_dir, exist_ok=True)
     shutil.copyfile(src, dst)
-    # post-copy verification: the output must exist and match the source size
-    if not os.path.isfile(dst):
-        raise SystemExit(f"copy failed: {dst} does not exist")
-    if os.path.getsize(dst) != os.path.getsize(src):
-        raise SystemExit(
-            f"copy failed: size mismatch {os.path.getsize(dst)} != {os.path.getsize(src)}"
-        )
-    print(f"verified {dst} ({os.path.getsize(dst)} bytes)")
+    # post-copy verification: the destination must exist and match the
+    # source size; otherwise fail loudly instead of shipping a broken entry.
+    if not os.path.exists(dst) or os.path.getsize(dst) != os.path.getsize(src):
+        sys.exit("entry.png was not copied correctly")
+    print(f"wrote {dst}")
 
 
 if __name__ == "__main__":
