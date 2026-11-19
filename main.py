@@ -1,32 +1,29 @@
 #!/usr/bin/env python3
-"""make.fun bounty entry: Sum up 18 November's world news in one image.
+"""make.fun entrypoint: copy entry.png to the output directory.
 
-The entry image is bundled as entry.png; this program copies it to the
-output directory. Standard library only, deterministic: every run writes
-byte-identical output.
-
-Usage:
-    mkdir -p out && MAKEFUN_OUTPUT_DIR=out python3 main.py
+Stdlib only. No network. The program writes exactly one image:
+entry.png (1024x1024, the day's world news on one page).
 """
-
 import os
 import shutil
-from pathlib import Path
-
-HERE = Path(__file__).resolve().parent
-OUT_DIR = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "out"))
+import sys
 
 
 def main():
-    src = HERE / "entry.png"
-    if not src.is_file():
-        raise SystemExit(f"entry.png not found next to {__file__}")
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    # Copy via a temp file and rename, so a run never leaves a partial
-    # entry.png behind; the bytes written are the bundled file's, unchanged.
-    tmp = OUT_DIR / ".entry.png.tmp"
-    shutil.copyfile(src, tmp)
-    os.replace(tmp, OUT_DIR / "entry.png")
+    here = os.path.dirname(os.path.abspath(__file__))
+    src = os.path.join(here, "entry.png")
+    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
+    os.makedirs(out_dir, exist_ok=True)
+    dst = os.path.join(out_dir, "entry.png")
+    shutil.copyfile(src, dst)
+    # post-copy verification: the output must exist and match the source size
+    if not os.path.isfile(dst):
+        raise SystemExit(f"copy failed: {dst} does not exist")
+    if os.path.getsize(dst) != os.path.getsize(src):
+        raise SystemExit(
+            f"copy failed: size mismatch {os.path.getsize(dst)} != {os.path.getsize(src)}"
+        )
+    print(f"verified {dst} ({os.path.getsize(dst)} bytes)")
 
 
 if __name__ == "__main__":
